@@ -1,8 +1,12 @@
 ### IntelliJ IDEA ###
+.idea/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .kotlin
+*.iml
+*.iws
+*.ipr
 
 ### Eclipse ###
 .apt_generated
@@ -19,7 +23,6 @@ bin/
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
-/dist/
 /nbdist/
 /.nb-gradle/
 
@@ -28,3 +31,19 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Maven build output ###
+backend/target/
+
+### Node / Frontend build ###
+frontend/node_modules/
+frontend/dist/
+frontend/package-lock.json
+node_modules/
+
+### Environment secrets ###
+.env
+*.env.local
+
+### Logs ###
+*.log

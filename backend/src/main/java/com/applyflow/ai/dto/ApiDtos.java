@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -40,16 +39,16 @@ public final class ApiDtos {
             boolean emailVerified) {
     }
 
-    public record RegisterRequest(@NotBlank String fullName, @NotBlank @Email String email, @NotBlank String password) {
+    public record RegisterRequest(@NotBlank String fullName, @NotBlank String email, @NotBlank String password) {
     }
 
-    public record LoginRequest(@NotBlank @Email String email, @NotBlank String password) {
+    public record LoginRequest(@NotBlank String email, @NotBlank String password) {
     }
 
     public record RefreshRequest(@NotBlank String refreshToken) {
     }
 
-    public record ForgotPasswordRequest(@NotBlank @Email String email) {
+    public record ForgotPasswordRequest(@NotBlank String email) {
     }
 
     public record ResetPasswordRequest(@NotBlank String token, @NotBlank String newPassword) {
@@ -130,9 +129,9 @@ public final class ApiDtos {
     }
 
     public record InterviewRequest(
-            UUID applicationId,
-            String roundName,
-            LocalDateTime scheduledAt,
+            @NotNull UUID applicationId,
+            @NotBlank String roundName,
+            @NotNull LocalDateTime scheduledAt,
             String location,
             String interviewType,
             String feedback,

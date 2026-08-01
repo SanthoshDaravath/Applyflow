@@ -17,7 +17,11 @@ export default function Register() {
     event.preventDefault();
     setLoading(true);
     try {
-      await register(form);
+      await register({
+        fullName: form.fullName.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password
+      });
       pushToast({ title: 'Account created', message: 'Your ApplyFlow AI workspace is ready.', type: 'success' });
       navigate('/');
     } catch (error) {
@@ -34,21 +38,21 @@ export default function Register() {
           <Label>Full name</Label>
           <div className="relative mt-2">
             <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <Input className="pl-10" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
+            <Input className="pl-10" required minLength={2} autoComplete="name" value={form.fullName} onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))} />
           </div>
         </div>
         <div>
           <Label>Email</Label>
           <div className="relative mt-2">
             <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <Input className="pl-10" type="email" value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} />
+            <Input className="pl-10" type="email" required autoComplete="email" value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} />
           </div>
         </div>
         <div>
           <Label>Password</Label>
           <div className="relative mt-2">
             <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-            <Input className="pl-10" type="password" value={form.password} onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))} />
+            <Input className="pl-10" type="password" required minLength={8} autoComplete="new-password" value={form.password} onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))} />
           </div>
         </div>
         <Button type="submit" className="w-full" size="lg" disabled={loading}>{loading ? 'Creating…' : 'Create account'}</Button>

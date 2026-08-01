@@ -61,7 +61,7 @@ export default function Interviews() {
               </div>
               <div>
                 <Label>Schedule</Label>
-                <Input className="mt-2" type="datetime-local" value={form.scheduledAt} onChange={(e) => setForm((prev) => ({ ...prev, scheduledAt: e.target.value }))} />
+                <Input className="mt-2" type="datetime-local" required value={form.scheduledAt} onChange={(e) => setForm((prev) => ({ ...prev, scheduledAt: e.target.value }))} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

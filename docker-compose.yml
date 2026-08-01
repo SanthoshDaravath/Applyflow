@@ -1,18 +1,17 @@
 services:
-  mysql:
-    image: mysql:8.4
-    container_name: applyflow-mysql
+  postgres:
+    image: postgres:16-alpine
+    container_name: applyflow-postgres
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-applyflow}
-      MYSQL_USER: ${MYSQL_USER:-applyflow}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-applyflow123}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      POSTGRES_DB: ${POSTGRES_DB:-applyflow}
+      POSTGRES_USER: ${POSTGRES_USER:-applyflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-applyflow123}
     ports:
-      - "3307:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_USER:-applyflow} -p${MYSQL_PASSWORD:-applyflow123}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-applyflow}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -43,7 +42,7 @@ services:
       context: ./backend
     container_name: applyflow-backend
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_started
@@ -52,9 +51,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SERVER_PORT: ${SERVER_PORT:-8080}
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-applyflow}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-applyflow}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-applyflow123}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-applyflow}
+      DATABASE_USERNAME: ${POSTGRES_USER:-applyflow}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-applyflow123}
       JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_TOKEN_TTL_MINUTES: ${JWT_ACCESS_TOKEN_TTL_MINUTES:-30}
       JWT_REFRESH_TOKEN_TTL_DAYS: ${JWT_REFRESH_TOKEN_TTL_DAYS:-14}
@@ -71,6 +70,7 @@ services:
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       MAIL_FROM: ${MAIL_FROM:-no-reply@applyflow.ai}
+      MANAGEMENT_HEALTH_MAIL_ENABLED: ${MANAGEMENT_HEALTH_MAIL_ENABLED:-false}
     ports:
       - "8080:8080"
 
@@ -82,12 +82,10 @@ services:
     container_name: applyflow-frontend
     depends_on:
       - backend
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api/v1}
     ports:
       - "5173:80"
 
 volumes:
-  mysql_data:
+  postgres_data:
   redis_data:
   rabbitmq_data:

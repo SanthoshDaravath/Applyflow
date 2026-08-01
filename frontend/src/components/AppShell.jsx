@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, BriefcaseBusiness, CircleDollarSign, GraduationCap, Home, LogOut, Menu, MoonStar, Settings, Sparkles, SunMedium, UserCircle2, Mail, CalendarDays } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, GraduationCap, Home, LogOut, Menu, MoonStar, Settings, Sparkles, SunMedium, UserCircle2, X } from 'lucide-react';
 import { Avatar, Button, Divider } from './ui';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
@@ -23,6 +23,7 @@ export default function AppShell() {
   const logout = useAuthStore((state) => state.logout);
   const theme = useUiStore((state) => state.theme);
   const toggleTheme = useUiStore((state) => state.toggleTheme);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const initials = useMemo(() => (user?.fullName || 'AF').split(' ').filter(Boolean).map((part) => part[0]).slice(0, 2).join('').toUpperCase() || 'AF', [user]);
 
@@ -30,6 +31,25 @@ export default function AppShell() {
     logout();
     navigate('/login');
   };
+
+  const NavItems = ({ onSelect }) => (
+    <nav className="space-y-1">
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            onClick={onSelect}
+            className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition ${isActive ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+          >
+            <Icon className="h-4 w-4" />
+            {item.label}
+          </NavLink>
+        );
+      })}
+    </nav>
+  );
 
   return (
     <div className="min-h-screen bg-hero-gradient text-slate-100">
@@ -44,21 +64,9 @@ export default function AppShell() {
               <div className="text-xs uppercase tracking-[0.25em] text-slate-400">Career OS</div>
             </div>
           </div>
-          <nav className="flex-1 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm transition ${isActive ? 'bg-white/10 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </NavLink>
-              );
-            })}
-          </nav>
+          <div className="flex-1">
+            <NavItems />
+          </div>
           <Divider />
           <div className="mt-5 rounded-3xl border border-cyan-400/20 bg-cyan-400/10 p-4">
             <div className="text-xs uppercase tracking-[0.28em] text-cyan-200/70">AI assistant</div>
@@ -70,7 +78,9 @@ export default function AppShell() {
           <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/65 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" className="xl:hidden" onClick={() => navigate('/')}> <Menu className="h-5 w-5" /> </Button>
+                <Button variant="ghost" className="xl:hidden" onClick={() => setMobileNavOpen(true)} aria-label="Open navigation">
+                  <Menu className="h-5 w-5" />
+                </Button>
                 <div>
                   <div className="text-sm uppercase tracking-[0.22em] text-slate-400">ApplyFlow AI</div>
                   <div className="text-xl font-semibold text-white">Hello, {user?.fullName || 'Friend'}</div>
@@ -104,6 +114,36 @@ export default function AppShell() {
           </div>
         </main>
       </div>
+      <AnimatePresence>
+        {mobileNavOpen && (
+          <motion.div className="fixed inset-0 z-50 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <button className="absolute inset-0 bg-slate-950/70" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)} />
+            <motion.aside
+              className="relative flex h-full w-80 max-w-[86vw] flex-col border-r border-white/10 bg-slate-950 px-5 py-6 shadow-2xl"
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="mb-8 flex items-center justify-between gap-3 px-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-slate-950">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-base font-semibold text-white">ApplyFlow AI</div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Career OS</div>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setMobileNavOpen(false)} aria-label="Close navigation">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <NavItems onSelect={() => setMobileNavOpen(false)} />
+            </motion.aside>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

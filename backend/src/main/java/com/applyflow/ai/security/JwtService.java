@@ -3,7 +3,6 @@ package com.applyflow.ai.security;
 import com.applyflow.ai.entity.UserEntity;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
@@ -72,6 +71,7 @@ public class JwtService {
                 .subject(subject)
                 .claims(claims)
                 .claim("uid", userId.toString())
+                .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(expiry))
                 .signWith(signingKey())

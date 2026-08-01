@@ -16,8 +16,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,6 +34,7 @@ import org.springframework.util.StringUtils;
 public class AuthService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -63,15 +66,19 @@ public class AuthService {
 
     @Transactional
     public ApiDtos.AuthResponse register(ApiDtos.RegisterRequest request) {
-        if (!StringUtils.hasText(request.email()) || !StringUtils.hasText(request.password())) {
+        String email = normalizeEmail(request.email());
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(request.password())) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Email and password are required");
         }
-        if (userRepository.existsByEmailIgnoreCase(request.email())) {
+        if (!isValidEmail(email)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_EMAIL", "Enter a valid email address");
+        }
+        if (userRepository.existsByEmailIgnoreCase(email)) {
             throw new ApiException(HttpStatus.CONFLICT, "EMAIL_EXISTS", "A user with this email already exists");
         }
         UserEntity user = UserEntity.builder()
-                .email(request.email().toLowerCase())
-                .fullName(request.fullName())
+                .email(email)
+                .fullName(request.fullName().trim())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .provider("local")
                 .role(DomainEnums.UserRole.USER)
@@ -84,8 +91,12 @@ public class AuthService {
 
     @Transactional
     public ApiDtos.AuthResponse login(ApiDtos.LoginRequest request) {
+        String email = normalizeEmail(request.email());
+        if (!isValidEmail(email)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_EMAIL", "Enter a valid email address");
+        }
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email().toLowerCase(), request.password()));
+                new UsernamePasswordAuthenticationToken(email, request.password()));
         UserEntity user = userRepository.findByEmailIgnoreCase(authentication.getName())
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_LOGIN", "Invalid credentials"));
         user.setLastLoginAt(Instant.now());
@@ -120,7 +131,11 @@ public class AuthService {
 
     @Transactional
     public ApiDtos.ForgotPasswordResponse forgotPassword(ApiDtos.ForgotPasswordRequest request) {
-        UserEntity user = userRepository.findByEmailIgnoreCase(request.email())
+        String email = normalizeEmail(request.email());
+        if (!isValidEmail(email)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_EMAIL", "Enter a valid email address");
+        }
+        UserEntity user = userRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "No account matches this email"));
         String resetCode = randomCode();
         redisTemplate.opsForValue().set(resetKey(resetCode), user.getEmail(), Duration.ofMinutes(15));
@@ -209,5 +224,13 @@ public class AuthService {
         } catch (Exception exception) {
             throw new IllegalStateException("Unable to hash refresh token", exception);
         }
+    }
+
+    private String normalizeEmail(String email) {
+        return StringUtils.hasText(email) ? email.trim().toLowerCase(Locale.ROOT) : "";
+    }
+
+    private boolean isValidEmail(String email) {
+        return EMAIL_PATTERN.matcher(email).matches();
     }
 }

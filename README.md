@@ -57,6 +57,23 @@ docker-compose up --build
 
 See `.env.example` for backend and frontend configuration values.
 
+## Render Deployment (Blueprint)
+
+This repository now includes `render.yaml` at the repo root for one-click Render Blueprint provisioning.
+
+1. Push this repository to GitHub.
+2. In Render, create a **Blueprint** from this repository.
+3. Render provisions backend, frontend, Redis, RabbitMQ (private service), and MySQL.
+4. Set required secret env vars in Render:
+   - `JWT_SECRET`
+   - `RABBITMQ_PASSWORD`
+   - `OPENAI_API_KEY` (if AI features are enabled)
+5. Confirm/update public URLs:
+   - Backend health check: `/api/v1/health`
+   - Backend API base: `https://<backend-domain>/api/v1`
+   - Frontend URL value in backend `FRONTEND_URL`
+   - Google OAuth redirect URI if OAuth is enabled
+
 ## Notes
 
 The repository is structured to be production-ready and extensible. External integrations such as Gmail, Google OAuth, OpenAI, and mail delivery are isolated behind service boundaries so they can be configured per environment.

@@ -1,0 +1,103 @@
+services:
+  - type: web
+    name: applyflow-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: 10000
+      - key: DATABASE_HOST
+        fromDatabase:
+          name: applyflow-db
+          property: host
+      - key: DATABASE_PORT
+        fromDatabase:
+          name: applyflow-db
+          property: port
+      - key: DATABASE_NAME
+        fromDatabase:
+          name: applyflow-db
+          property: database
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: applyflow-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: applyflow-db
+          property: password
+      - key: FRONTEND_URL
+        value: https://applyflow-frontend.onrender.com
+      - key: REDIS_HOST
+        fromService:
+          name: applyflow-redis
+          type: keyvalue
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          name: applyflow-redis
+          type: keyvalue
+          property: port
+      - key: RABBITMQ_HOST
+        fromService:
+          name: applyflow-rabbitmq
+          type: pserv
+          property: host
+      - key: RABBITMQ_PORT
+        value: 5672
+      - key: RABBITMQ_USERNAME
+        value: guest
+      - key: RABBITMQ_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        value: disabled
+      - key: GOOGLE_CLIENT_SECRET
+        value: disabled
+      - key: GOOGLE_REDIRECT_URI
+        value: https://applyflow-backend.onrender.com/login/oauth2/code/google
+      - key: MAIL_FROM
+        value: no-reply@applyflow.ai
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MANAGEMENT_HEALTH_MAIL_ENABLED
+        value: "false"
+
+  - type: web
+    name: applyflow-frontend
+    runtime: docker
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://applyflow-backend.onrender.com/api/v1
+
+  - type: pserv
+    name: applyflow-rabbitmq
+    runtime: image
+    image:
+      url: docker.io/library/rabbitmq:3-management-alpine
+
+  - type: keyvalue
+    name: applyflow-redis
+    ipAllowList: []
+
+databases:
+  - name: applyflow-db
+    databaseName: applyflow
+    user: applyflow
